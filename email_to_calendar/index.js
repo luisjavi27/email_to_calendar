@@ -4,11 +4,12 @@ const readline = require("readline");
 const { google } = require("googleapis");
 
 const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
-const TOKEN_PATH = "token.json";
+const TOKEN_PATH = "credentials/token.json";
+const CREDENTIALS_PATH = "credentials/credentials.json";
 
 function doFunction(callback, optional=null) {
 
-  fs.readFile("credentials.json", (err, content) => {
+  fs.readFile(CREDENTIALS_PATH, (err, content) => {
     if (err) return console.log("Error loading client secret file:", err);
      authorize(JSON.parse(content), callback, optional);
     // authorize(JSON.parse(content), getEmail);
