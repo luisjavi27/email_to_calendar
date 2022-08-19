@@ -1,31 +1,21 @@
+const {PubSub} = require('@google-cloud/pubsub');
 const fs = require("fs");
 const readline = require("readline");
 const { google } = require("googleapis");
 
-// If modifying these scopes, delete token.json.
 const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
-// The file token.json stores the user's access and refresh tokens, and is
-// created automatically when the authorization flow completes for the first
-// time.
 const TOKEN_PATH = "token.json";
 
-// Load client secrets from a local file.
-fs.readFile("credentials.json", (err, content) => {
-  if (err) return console.log("Error loading client secret file:", err);
-  // Authorize a client with credentials, then call the Gmail API.
-//   authorize(JSON.parse(content), listLabels);
-  //
-//   authorize(JSON.parse(content), listEmail);
-  authorize(JSON.parse(content), getEmail);
-});
+function doFunction(callback, optional=null) {
 
-/**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
- * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
- */
-function authorize(credentials, callback) {
+  fs.readFile("credentials.json", (err, content) => {
+    if (err) return console.log("Error loading client secret file:", err);
+     authorize(JSON.parse(content), callback, optional);
+    // authorize(JSON.parse(content), getEmail);
+  });
+}
+
+function authorize(credentials, callback, optional=null) {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
     client_id,
@@ -33,20 +23,18 @@ function authorize(credentials, callback) {
     redirect_uris[0]
   );
 
-  // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, (err, token) => {
     if (err) return getNewToken(oAuth2Client, callback);
     oAuth2Client.setCredentials(JSON.parse(token));
-    callback(oAuth2Client, "1829f210f6f6c44c");
+    if(optional==null){
+      callback(oAuth2Client);
+    }else{
+      callback(oAuth2Client, optional)
+    }
+    
   });
 }
 
-/**
- * Get and store new token after prompting for user authorization, and then
- * execute the given callback with the authorized OAuth2 client.
- * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback for the authorized client.
- */
 function getNewToken(oAuth2Client, callback) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: "offline",
@@ -62,7 +50,6 @@ function getNewToken(oAuth2Client, callback) {
     oAuth2Client.getToken(code, (err, token) => {
       if (err) return console.error("Error retrieving access token", err);
       oAuth2Client.setCredentials(token);
-      // Store the token to disk for later program executions
       fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
         if (err) return console.error(err);
         console.log("Token stored to", TOKEN_PATH);
@@ -72,71 +59,66 @@ function getNewToken(oAuth2Client, callback) {
   });
 }
 
-/**
- * Lists the labels in the user's account.
- *
- * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
- */
-function listLabels(auth) {
+doFunction(listEmail)
+
+  function listEmail(auth) {
   const gmail = google.gmail({ version: "v1", auth });
-  gmail.users.labels.list(
+  gmail.users.messages.list(
     {
       userId: "me",
+      
+        q: "label:unread",
+      
     },
-    (err, res) => {
+    (err, res) =>  {
       if (err) return console.log("The API returned an error: " + err);
-      const labels = res.data.labels;
-      if (labels.length) {
-        console.log("Labels:");
-        labels.forEach((label) => {
-          console.log(`- ${label.name}`);
+      const messages = res.data.messages;
+       console.log(messages.length)
+      if (messages.length) {
+        console.log("Messages:");
+        messages.forEach((message, ) => {
+          
+        doFunction(getEmail, message.id )
         });
       } else {
-        console.log("No labels found.");
+        console.log("No message found.");
       }
     }
   );
 }
 
-function listEmail(auth) {
+ function getEmail(auth, messageId) {
   const gmail = google.gmail({ version: "v1", auth });
-  gmail.users.messages.list(
+   gmail.users.messages.get(
     {
       userId: "me",
+      id: messageId,
     },
-    (err, res) => {
-      if (err) return console.log("The API returned an error: " + err);
-      const messages = res.data.messages;
-      if (messages.length) {
-        console.log("Messages:");
-        messages.forEach((message) => {
-          console.log(`- ${message.id} - ${message.threadId}`);
-        });
-      } else {
-        console.log("No message found.");
-      }
-    }
-  );
-}
-function getEmail(auth, messageId) {
-  const gmail = google.gmail({ version: "v1", auth });
-  gmail.users.messages.get(
-    {
-      userId: "me",
-      id: messageId
-    },
-    (err, res) => {
+    (err, res)  => {
       if (err) return console.log("The API returned an error: " + err);
       const message = res.data;
+      // console.log("headers: ",res.data.payload.headers)
+      // console.log("body: ", res.data.payload.body)
+      
       if (message) {
-        //   console.log("Message:", message);
         // message.payload.headers.forEach((header, index) => {console.log(index," header: ", header);})
-        message.payload.parts.forEach((parts, index) => {console.log(index," parts: ", parts);}) // esto responde en base64
-        //   console.log(message);
+        // message.snippets.forEach((part) => {
+          // const base64 = part.body.data;
+          // const buff = Buffer.from(base64, "base64");
+          // const str = buff.toString("utf-8");
+
+          console.log("-- ", message.snippet);
           
+          if(message.payload.parts !== undefined){
+            console.log("parts: ", res.data.payload.parts.length)
+          }else{
+            console.log("no parts")
+          }
+        // });
       } else {
         console.log("No message found.");
       }
     }
   );
 }
+
