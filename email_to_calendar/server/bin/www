@@ -3,18 +3,17 @@
 /**
  * Module dependencies.
  */
-
+ 
 const app = require('../app');
 const debug = require('debug')('email-to-calendar:server');
 const http = require('http');
-const bootstrap = require('../SRC/main')
 /**
  * Get port from environment and store in Express.
  */
 
-const port = normalizePort(process.env.PORT || '3000');
+const port = normalizePort(process.env.SERVER_PORT || '3010');
 app.set('port', port);
-console.log(`http://localhost:${process.env.PORT || '3000'}`)
+console.log(`http://localhost:${port}`)
 
 /**
  * Create HTTP server.
