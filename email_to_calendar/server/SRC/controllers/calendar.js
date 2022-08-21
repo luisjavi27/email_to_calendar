@@ -1,18 +1,26 @@
 const calendarServices = require("../services/calendar");
-const { authorize } = require("../services/auth");
 
 const calendarController = {
-  listEvents: async (req, res) => {
-    const auth =  authorize();
-    const results =  await calendarServices.listEvents(auth);
-    res.render("index", { results });
+  getEvents: async (req, res) => {
+    const eventList = await calendarServices.getEvents();
+    if (eventList.error) {
+      res.status(500);
+      res.send(eventList);
+    } else {
+      res.status(200);
+      res.send(eventList);
+    }
   },
 
-  insertEvent:async (req, res) => {
-    const auth =  authorize();
-    const result =  await calendarServices.insertEvent(auth);
-    res.render("index2", { result });
-
+  createEvent: async (req, res) => {
+    const eventCreated = await calendarServices.createEvent();
+    if (eventCreated.error) {
+      res.status(500);
+      res.send(eventCreated);
+    } else {
+      res.status(200);
+      res.send(eventCreated);
+    }
   },
 };
 

@@ -1,14 +1,27 @@
-const fs = require("fs");
-const { listEmail, getEmail } = require("../services/email");
-const { authorize } = require("../services/auth");
+const emailServices = require("../services/email");
 
+const emailController = {
+  getEmails: async (req, res) => {
+    const emailList = await emailServices.getEmails();
+    if (emailList.error == undefined) {
+      res.status(500);
+      res.send(emailList);
+    } else {
+      res.status(200);
+      res.send(emailList);
+    }
+  },
 
-const CREDENTIALS_PATH = process.env.CREDENTIALS_PATH
+  getOneEmail: async (req, res) => {
+    const email = await emailServices.getOneEmail(req.params.emailId);
+    if (email.error) {
+      res.status(500);
+      res.send(email);
+    } else {
+      res.status(200);
+      res.send(email);
+    }
+  },
+};
 
-function doFunction(callback, optional = null) {
-  fs.readFile(CREDENTIALS_PATH, (err, content) => {
-    if (err) return console.log("Error loading client secret file:", err);
-    authorize(JSON.parse(content), callback, optional);
-    // authorize(JSON.parse(content), getEmail);
-  });
-}
+module.exports = emailController;

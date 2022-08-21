@@ -1,11 +1,10 @@
 var express = require('express');
 var router = express.Router();
 const calendarController = require("../controllers/calendar");
-const emailController = require("../controllers/email");
 
 
 /* GET home page. */
-router.get('/listEvents', calendarController.listEvents);
-router.get('/insertEvent', calendarController.insertEvent);
+router.get('/getEvents', calendarController.getEvents);
+router.get('/createEvent', calendarController.createEvent);
 
 module.exports = router;

@@ -1,7 +1,10 @@
 const { google } = require("googleapis");
+const { authorize } = require("./auth");
+
+const auth = authorize();
 
 const calendarServices = {
-  listEvents: async (auth) => {
+  getEvents: async () => {
     const calendar = google.calendar({ version: "v3", auth });
     let result = [];
     let callApi = undefined;
@@ -19,20 +22,19 @@ const calendarServices = {
         events.forEach((event) => {
           const start = event.start.dateTime || event.start.date;
           result.push(
-            // `Id: ${event.id}: Start Date: ${start} Event: ${event.summary}: ${event.description}`
             `Id: ${event.id}: Start Date: ${start} Event: ${event.summary}`
           );
         });
       } else {
         result.push("No upcoming events found.");
       }
-      return result;
+      return { data: result };
     } catch (error) {
-      return console.log("The API returned an error: " + error);
+      return { Error: { code: 500, data: error.toString() } };
     }
   },
 
-  insertEvent:async (auth) => {
+  createEvent: async () => {
     let event = {
       summary: "Google I/O 2015", // title
       location: "800 Howard St., San Francisco, CA 94103",
@@ -47,11 +49,12 @@ const calendarServices = {
         dateTime: "2022-08-20T17:00:00+00:00", // the +00:00 time let me use the timeZone indication
         timeZone: "America/Bogota",
       },
- 
-      attendees: [ // invitados
-         {'email': 'luisjavi27@gmail.com'},
-         {'email': 'luisjavi27@hotmail.com'},
-       ],
+
+      attendees: [
+        // invitados
+        { email: "luisjavi27@gmail.com" },
+        { email: "luisjavi27@hotmail.com" },
+      ],
       reminders: {
         useDefault: false,
         overrides: [
@@ -59,31 +62,26 @@ const calendarServices = {
           { method: "popup", minutes: 10 },
         ],
       },
-      
-      
     };
     const calendar = google.calendar({ version: "v3", auth });
-    let result = undefined;
-
     let callApi = undefined;
+
     try {
-      callApi = await calendar.events.insert(
-      {
+      callApi = await calendar.events.insert({
         auth: auth,
         calendarId: "primary", // could be another passing an calendar_id
         sendUdpates: "externalOnly",
         resource: event,
+      });
 
-      })
-      
-      console.log("Event created: %s", callApi.data.htmlLink, );
-      console.log( callApi.data.description);
-      
-        return callApi
-      
-    }catch (error) {
-      console.log(
-        "There was an error contacting the Calendar service: " + error)
+      return {
+        data: {
+          Event: callApi.data.description,
+          Link: callApi.data.htmlLink,
+        },
+      };
+    } catch (error) {
+      return { Error: { code: 500, data: error.toString() } };
     }
   },
 };

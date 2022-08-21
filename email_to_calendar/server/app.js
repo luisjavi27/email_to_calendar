@@ -5,8 +5,8 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
-const indexRouter = require('./SRC/routes/index');
-const usersRouter = require('./SRC/routes/users');
+const emailRouter = require('./SRC/routes/email');
+const calendarRouter = require('./SRC/routes/calendar');
 
 const app = express();
 
@@ -20,8 +20,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/email', emailRouter);
+app.use('/calendar', calendarRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -32,11 +32,11 @@ app.use(function(req, res, next) {
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  // res.locals.error = req.app.get('env') === 'development' ? err : {};
+  res.locals.error = err ;
 
-  // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.send({'Error: ':err});
 });
 
 module.exports = app;
