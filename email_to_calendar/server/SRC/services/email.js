@@ -26,7 +26,7 @@ const emailServices = {
         return { error: { code: 400, data: messages } };
       }
     } catch (error) {
-      return { Error: { code: 500, data: error.toString() } };
+      return { error: { code: 500, data: error.toString() } };
     }
   },
 
@@ -89,7 +89,7 @@ const emailServices = {
         return { Error: { code: 404, data: error.toString() } };
       }
     } catch (error) {
-      return { Error: { code: 500, data: error.toString() } };
+      return { error: { code: 500, data: error.toString() } };
     }
   },
 
@@ -106,12 +106,55 @@ const emailServices = {
       if (createFile) {
         fs.writeFileSync(`${__dirname}../icsFiles/event.ics`, value);
 
-        return { Data: {  Status: "File created successfully" } };
+        return { Data: { Status: "File created successfully" } };
       } else {
         return { Error: { code: 400, data: error.toString() } };
       }
     } catch (error) {
       return { Error: { code: 500, data: error.toString() } };
+    }
+  },
+
+  sendEmail: async () => {
+    try {
+      // const gmail = google.gmail('v1');
+      // google.options({auth});
+
+      const gmail = google.gmail({ version: "v1", auth });
+
+      const subject = "🤘 Hello 🤘";
+      const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString(
+        "base64"
+      )}?=`;
+      const messageParts = [
+        "From: Luis javier Iglesias <luis.iglesias.dev@google.com>", // necessary, call from config.json
+        "To: <luisjavi27@gmail.com>", 
+        "Content-Type: text/html; charset=utf-8",
+        "MIME-Version: 1.0",
+        `Subject: ${utf8Subject}`,
+        "",
+        "This is a message just to say hello.",
+        "So... <b>Hello!</b>  🤘❤️😎",
+      ];
+      const message = messageParts.join("\n");
+
+      // The body needs to be base64url encoded.
+      const encodedMessage = Buffer.from(message)
+        .toString("base64")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+
+      const res = await gmail.users.messages.send({
+        userId: "me",
+        requestBody: {
+          raw: encodedMessage,
+        },
+      });
+      console.log(res.data);
+      return { data: res.data };
+    } catch (error) {
+      return { error: { code: 500, data: error.toString() } };
     }
   },
 };
