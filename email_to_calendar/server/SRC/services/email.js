@@ -7,24 +7,29 @@ const auth = authorize();
 
 const emailServices = {
   getEmails: async () => {
+    const labels = `from:<luis.iglesias.dev@gmail.com> is:unread is:INBOX`; // could get filter parameters by query or body
+
     const gmail = google.gmail({ version: "v1", auth });
     let callApi = undefined;
     try {
       callApi = await gmail.users.messages.list({
         userId: "me",
-        q: "label:unread",
+        q: labels,
       });
 
-      const messages = callApi.data.messages;
-
-      if (messages.length) {
-        messages.forEach((message) => {
-          message.link = `http://localhost:3010/email/getOneEmail/${message.id}`;
-        });
-        return { data: messages };
-      } else {
-        return { error: { code: 400, data: messages } };
+      if (callApi.data.resultSizeEstimate > 0) {
+        const messages = callApi.data.messages;
+        if (messages.length != undefined) {
+          messages.forEach((message) => {
+            message.link = `http://localhost:3010/email/getOneEmail/${message.id}`;
+          });
+          return { data: messages };
+        } else {
+          messages.link = `http://localhost:3010/email/getOneEmail/${message.id}`;
+          return { data: messages };
+        }
       }
+      return { data: [] };
     } catch (error) {
       return { error: { code: 500, data: error.toString() } };
     }
@@ -57,10 +62,10 @@ const emailServices = {
         const to = message.payload.headers.find(
           (header) => header.name == "To"
         );
-
         const date = message.payload.headers.find(
           (header) => header.name == "Date"
         );
+        const labels = message.labelIds;
 
         if (message.payload.parts !== undefined) {
           return {
@@ -68,10 +73,12 @@ const emailServices = {
               Date: date.value,
               From: from.value,
               To: to.value,
+              Labels: labels,
               Subject: subject.value,
               message: body,
               ContentType: ContentType.value,
               parts: res.data.payload.parts.length,
+              markRead: `http://localhost:3010/email/updateLabels?messageId=${messageId}&addLabel=read&removeLabel=UNREAD`,
             },
           };
         }
@@ -80,9 +87,11 @@ const emailServices = {
             Date: date.value,
             From: from.value,
             To: to.value,
+            Labels: labels,
             Subject: subject.value,
             message: body,
             ContentType: ContentType.value,
+            markRead: `http://localhost:3010/email/updateLabels?messageId=${messageId}`,
           },
         };
       } else {
@@ -90,6 +99,30 @@ const emailServices = {
       }
     } catch (error) {
       return { error: { code: 500, data: error.toString() } };
+    }
+  },
+  updateLabelsEmail: async (messageId, addLabel, removeLabel) => {
+    const gmail = google.gmail({ version: "v1", auth });
+    let callApi = undefined;
+
+    try {
+      callApi = await gmail.users.messages.modify({
+        userId: "me",
+        id: messageId,
+        requestBody: {
+          addLabelIds: [addLabel],
+          removeLabelIds: [removeLabel],
+        },
+      });
+      const message = callApi;
+      console.log(message);
+      if (message) {
+        return { Data: message.data };
+      } else {
+        return { error: { code: 500, data: message } };
+      }
+    } catch (error) {
+      return { error: { code: 500, data: error } };
     }
   },
 
@@ -115,26 +148,23 @@ const emailServices = {
     }
   },
 
-  sendEmail: async () => {
+  sendEmail: async (toEmail, subjectEmail, messageEmail) => {
     try {
-      // const gmail = google.gmail('v1');
-      // google.options({auth});
-
+      console.log(toEmail, subjectEmail, messageEmail)
       const gmail = google.gmail({ version: "v1", auth });
 
-      const subject = "🤘 Hello 🤘";
+      const subject = `${subjectEmail}`;
       const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString(
         "base64"
       )}?=`;
       const messageParts = [
-        "From: Luis javier Iglesias <luis.iglesias.dev@google.com>", // necessary, call from config.json
-        "To: <luisjavi27@gmail.com>", 
+        `From: Luis javier Iglesias <luis.iglesias.dev@gmail.com>`, // necessary, call from config.json
+        `To: <${toEmail}>`,
         "Content-Type: text/html; charset=utf-8",
         "MIME-Version: 1.0",
         `Subject: ${utf8Subject}`,
         "",
-        "This is a message just to say hello.",
-        "So... <b>Hello!</b>  🤘❤️😎",
+        `${messageEmail}`,
       ];
       const message = messageParts.join("\n");
 
