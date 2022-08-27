@@ -13,7 +13,8 @@ const calendarController = {
   },
 
   createEvent: async (req, res) => {
-    const eventCreated = await calendarServices.createEvent();
+    let event = req.body.event
+    const eventCreated = await calendarServices.createEvent(event);
     if (eventCreated.error) {
       res.status(500);
       res.send(eventCreated);

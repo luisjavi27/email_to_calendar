@@ -2,6 +2,7 @@ const { google } = require("googleapis");
 const { authorize } = require("./auth");
 const fs = require("fs");
 const ics = require("ics");
+const { convert } = require('html-to-text');
 
 const auth = authorize();
 
@@ -38,36 +39,49 @@ const emailServices = {
   getOneEmail: async (messageId) => {
     const gmail = google.gmail({ version: "v1", auth });
     let callApi = undefined;
+    var message = undefined;
     try {
       callApi = await gmail.users.messages.get({
         userId: "me",
         id: messageId,
       });
-      const message = callApi.data;
+      if (callApi.data.payload.mimeType == "multipart/alternative") {
+        callApi.data.payload.parts.forEach((part) => {
+          if (part.mimeType == "text/html") {
+            message = part;
+          }
+        });
+      } else {
+        message = callApi.data.payload;
+      }
 
-      if (message) {
-        const body = Buffer.from(message.payload.body.data, "base64").toString(
-          "utf-8"
-        );
+      // if (message.mimeType == "text/html") {
+      if (message.body.size > 0) {
+        let body = Buffer.from(message.body.data, "base64").toString("utf-8");
 
-        const ContentType = message.payload.headers.find(
+        body =  convert(body, {
+          wordwrap: 130,
+          whitespaceCharacters:"\r\n"
+        });
+
+        const ContentType = callApi.data.payload.headers.find(
           (header) => header.name == "Content-Type"
         );
-        const subject = message.payload.headers.find(
+        const subject = callApi.data.payload.headers.find(
           (header) => header.name == "Subject"
         );
-        const from = message.payload.headers.find(
+        const from = callApi.data.payload.headers.find(
           (header) => header.name == "From"
         );
-        const to = message.payload.headers.find(
+        const to = callApi.data.payload.headers.find(
           (header) => header.name == "To"
         );
-        const date = message.payload.headers.find(
+        const date = callApi.data.payload.headers.find(
           (header) => header.name == "Date"
         );
-        const labels = message.labelIds;
+        const labels = callApi.data.payload.labelIds;
 
-        if (message.payload.parts !== undefined) {
+        if (callApi.data.parts !== undefined) {
           return {
             data: {
               Date: date.value,
@@ -77,7 +91,7 @@ const emailServices = {
               Subject: subject.value,
               message: body,
               ContentType: ContentType.value,
-              parts: res.data.payload.parts.length,
+              parts: message.data.payload.parts.length,
               markRead: `http://localhost:3010/email/updateLabels?messageId=${messageId}&addLabel=read&removeLabel=UNREAD`,
             },
           };
@@ -95,7 +109,7 @@ const emailServices = {
           },
         };
       } else {
-        return { Error: { code: 404, data: error.toString() } };
+        return { Error: { code: 404, data: message } };
       }
     } catch (error) {
       return { error: { code: 500, data: error.toString() } };
@@ -150,7 +164,7 @@ const emailServices = {
 
   sendEmail: async (toEmail, subjectEmail, messageEmail) => {
     try {
-      console.log(toEmail, subjectEmail, messageEmail)
+      console.log(toEmail, subjectEmail, messageEmail);
       const gmail = google.gmail({ version: "v1", auth });
 
       const subject = `${subjectEmail}`;

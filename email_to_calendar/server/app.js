@@ -45,7 +45,7 @@ rutine();
 
 function rutine() {
   fork("./server/worker.js")
-   setTimeout(rutine, 60000);
+   setTimeout(rutine, timeout);
 }
 
 module.exports = app;

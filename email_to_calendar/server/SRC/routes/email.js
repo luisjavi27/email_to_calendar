@@ -5,9 +5,9 @@ const emailController = require("../controllers/email");
 
 /* GET home page. */
 router.get('/getEmails', emailController.getEmails);
-router.get('/getOneEmail/:emailId', emailController.getOneEmail);
+router.get('/getOneEmail/:messageId', emailController.getOneEmail);
 
-router.post('/updateLabels', emailController.updateLabelsEmail);
+router.post('/updateLabels/:messageId', emailController.updateLabelsEmail);
 router.post('/sendEmail', emailController.sendEmail);
 
 module.exports = router;

@@ -34,35 +34,8 @@ const calendarServices = {
     }
   },
 
-  createEvent: async () => {
-    let event = {
-      summary: "Google I/O 2015", // title
-      location: "800 Howard St., San Francisco, CA 94103",
-      description: "A chance to hear more about Google's developer products.", // event detaill - description
-      start: {
-        // start date
-        dateTime: "2022-08-20T14:00:00+00:00", // the +00:00 time let me use the timeZone indication
-        timeZone: "America/Bogota",
-      },
-      end: {
-        // end date
-        dateTime: "2022-08-20T17:00:00+00:00", // the +00:00 time let me use the timeZone indication
-        timeZone: "America/Bogota",
-      },
-
-      attendees: [
-        // invitados
-        { email: "luisjavi27@gmail.com" },
-        { email: "luisjavi27@hotmail.com" },
-      ],
-      reminders: {
-        useDefault: false,
-        overrides: [
-          { method: "email", minutes: 24 * 60 },
-          { method: "popup", minutes: 10 },
-        ],
-      },
-    };
+  createEvent: async (event) => {
+   
     const calendar = google.calendar({ version: "v3", auth });
     let callApi = undefined;
 
