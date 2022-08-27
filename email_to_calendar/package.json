@@ -18,9 +18,12 @@
     "http-errors": "~1.6.3",
     "ics": "^2.37.0",
     "morgan": "~1.9.1",
-    "node-fetch": "^2.6.7"
+    "mysql2": "^2.3.3",
+    "node-fetch": "^2.6.7",
+    "sequelize": "^6.21.4"
   },
   "devDependencies": {
-    "nodemon": "^2.0.19"
+    "nodemon": "^2.0.19",
+    "sequelize-cli": "^6.4.1"
   }
 }
