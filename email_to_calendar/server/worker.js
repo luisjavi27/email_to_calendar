@@ -134,6 +134,11 @@ async function worker() {
   }
 }
 
+let codes = JSON.parse(fs.readFileSync("countryCodes.json", "utf8") )
+
+Object.entries(codes).forEach((code)=>{
+  // console.log(code[0], code[1]);
+})
 
 
 
