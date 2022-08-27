@@ -134,34 +134,8 @@ async function worker() {
   }
 }
 
-let codes = JSON.parse(fs.readFileSync("countryCodes.json", "utf8") )
 
-Object.entries(codes).forEach((code)=>{
-  // console.log(code[0], code[1]);
-})
 
-async function dep () {
-  let depMun ={}
-  let departmentsPromise = await fetch(
-    `https://www.datos.gov.co/resource/95qx-tzs7.json`
-    );
-    let departments = await departmentsPromise.json();
-    // console.log(departments);
-    departments.forEach((department)=>{
-      if(depMun[department.departamento]== undefined){
-        depMun[department.departamento]=[department.municipio]
-      }else{
-        depMun[department.departamento].push(department.municipio);
-      }
-      
-    }
-    )
-    console.log(list)
-    return depMun
-  }
-  
-   let list =   dep()
-  
 
 // worker();
 process.exit;

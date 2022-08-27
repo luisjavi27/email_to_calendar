@@ -1,10 +1,18 @@
 import React from "react";
 import { Formik, Field, Form } from "formik";
 import { useEffect, useState } from "react";
-import Select from "./Select";
-
+let countryCodes = require("../assets/countryCodes")
+let codes = [];
+console.log( typeof countryCodes)
+countryCodes.forEach((entry) => {
+  codes.push([Object.keys(entry), Object.values(entry)])
+  
+})
+ 
+codes.sort()
 function Basic() {
-  let destinos= ["Zipaquirá",
+
+    let destinos= ["Zipaquirá",
               "Villa de Leyva",
               "Chicaque",
               "Suesca"]
@@ -122,13 +130,13 @@ function Basic() {
                 // onChange={handleChange}
               >
                 <option value="">Select..</option>
-                {destinos.map((destino, i) => {
+                 {destinos.map((destino, i) => {
                   return (
                     <option value={destino} key={i}>
                       {destino}
                     </option>
                   );
-                })}
+                })} 
               </Field>
 
               {/* <label className="ml-2 mr-2 mt-2" htmlFor="mucipes">
@@ -145,6 +153,33 @@ function Basic() {
                 id="email"
                 name="email"
                 type="email"
+              />
+              <label className="ml-2 mr-2 mt-2" htmlFor="countryCode">
+                Codigo
+              </label>
+              <Field
+                className="ml-2 mr-2 mb-2"
+                id="countryCode"
+                name="countryCode"
+                as="select"
+              >
+                <option value="">Select..</option>
+                 {codes.map((code, i) => {
+                  return (
+                    <option value={code[0]+" "+code[1]} key={i+code[0]}>
+                      {code[0]+" "+code[1]}
+                    </option>
+                  );
+                })} 
+              </Field>
+              <label className="ml-2 mr-2 mt-2" htmlFor="phone">
+                Telefono
+              </label>
+              <Field
+                className="ml-2 mr-2 mb-2"
+                id="phone"
+                name="phone"
+                type="tel"
               />
               <button className="btn ml-2 mr-2 mb-2 mt-4" type="submit">
                 Enviar
